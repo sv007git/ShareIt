@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>ShareIt - Redirecting...</title>
+    <script>
+      // Single Page Application redirect script for GitHub Pages
+      // Encodes path into hash and reloads root SPA
+      (function () {
+        var pathSegmentsToKeep = 1; // 1 for repo name /ShareIt/
+        var l = window.location;
+        var pathSegments = l.pathname.split('/').filter(Boolean);
+        var repoName = pathSegments[0] || 'ShareIt';
+        var restOfPath = pathSegments.slice(pathSegmentsToKeep).join('/');
+
+        var redirectUrl = l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
+          '/' + repoName + '/#/' + restOfPath +
+          (l.search ? '?' + l.search.slice(1) : '') +
+          (l.hash ? l.hash : '');
+
+        window.location.replace(redirectUrl);
+      })();
+    </script>
+  </head>
+  <body style="background-color: #0f172a; color: #f8fafc; font-family: sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0;">
+    <div style="text-align: center;">
+      <h2 style="font-size: 1.5rem; margin-bottom: 0.5rem;">Redirecting to ShareIt room...</h2>
+      <p style="color: #94a3b8; font-size: 0.9rem;">Taking you to your secure meeting room...</p>
+    </div>
+  </body>
+</html>
