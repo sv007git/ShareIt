@@ -3,7 +3,7 @@ import { MediaManager } from '../webrtc/mediaManager';
 import { PeerManager } from '../webrtc/peerManager';
 import { SignalingClient, SignalingConnectionStatus } from '../signaling/signalingClient';
 import { FileTransferService } from '../services/fileTransferService';
-import { PeerInfo, ChatMessage, FileTransferState } from '../signaling/types';
+import { PeerInfo, ChatMessage, FileTransferState, RemoteControlEvent, RemoteControlState } from '../signaling/types';
 import { generatePeerId } from '../utils/idGenerator';
 import { useSettings } from '../contexts/SettingsContext';
 
@@ -54,6 +54,17 @@ export function useRoom() {
   const [unreadChatCount, setUnreadChatCount] = useState<number>(0);
   const [fileTransfers, setFileTransfers] = useState<FileTransferState[]>([]);
   const [error, setError] = useState<string | null>(null);
+
+  // Remote Control State
+  const [remoteControlState, setRemoteControlState] = useState<RemoteControlState>({
+    isControlling: false,
+    isBeingControlled: false,
+    activeControllerId: null,
+    activeControllerName: null,
+    pendingRequest: null,
+    controlMode: 'pointer',
+  });
+  const [incomingRemoteControlEvent, setIncomingRemoteControlEvent] = useState<RemoteControlEvent | null>(null);
 
   // References
   const mediaManagerRef = useRef<MediaManager | null>(null);
@@ -300,6 +311,86 @@ export function useRoom() {
           onFileMessage: (data) => {
             fileService.handleIncomingMessage(data);
           },
+          onRemoteControlRequest: (requesterPeerId, requesterName) => {
+            setRemoteControlState(prev => ({
+              ...prev,
+              pendingRequest: { requesterPeerId, requesterName }
+            }));
+          },
+          onRemoteControlResponse: (accepted, presenterPeerId, presenterName) => {
+            if (accepted) {
+              setRemoteControlState(prev => ({
+                ...prev,
+                isControlling: true,
+                activeControllerId: presenterPeerId,
+                activeControllerName: presenterName
+              }));
+              setChatMessages(prev => [
+                ...prev,
+                {
+                  id: `sys-${Date.now()}`,
+                  senderPeerId: 'system',
+                  senderName: 'ShareIt System',
+                  text: `Remote control granted by ${presenterName}. Click and drag on the screen to control.`,
+                  timestamp: Date.now(),
+                  isSystem: true
+                }
+              ]);
+            } else {
+              setChatMessages(prev => [
+                ...prev,
+                {
+                  id: `sys-${Date.now()}`,
+                  senderPeerId: 'system',
+                  senderName: 'ShareIt System',
+                  text: `Remote control request was declined by ${presenterName}.`,
+                  timestamp: Date.now(),
+                  isSystem: true
+                }
+              ]);
+            }
+          },
+          onRemoteControlEvent: (evt, _senderPeerId) => {
+            setIncomingRemoteControlEvent(evt);
+          },
+          onRemoteControlRevoked: () => {
+            setRemoteControlState(prev => ({
+              ...prev,
+              isControlling: false,
+              activeControllerId: null,
+              activeControllerName: null
+            }));
+            setChatMessages(prev => [
+              ...prev,
+              {
+                id: `sys-${Date.now()}`,
+                senderPeerId: 'system',
+                senderName: 'ShareIt System',
+                text: 'Remote control access was revoked by the presenter.',
+                timestamp: Date.now(),
+                isSystem: true
+              }
+            ]);
+          },
+          onRemoteControlReleased: () => {
+            setRemoteControlState(prev => ({
+              ...prev,
+              isBeingControlled: false,
+              activeControllerId: null,
+              activeControllerName: null
+            }));
+            setChatMessages(prev => [
+              ...prev,
+              {
+                id: `sys-${Date.now()}`,
+                senderPeerId: 'system',
+                senderName: 'ShareIt System',
+                text: 'Remote control was released by the remote participant.',
+                timestamp: Date.now(),
+                isSystem: true
+              }
+            ]);
+          },
           onForceMute: () => {
             mediaManager.toggleAudio(false);
             setIsAudioMuted(true);
@@ -454,6 +545,93 @@ export function useRoom() {
     fileTransferServiceRef.current?.cancelTransfer(fileId);
   }, []);
 
+  // Remote Control Handlers
+  const requestRemoteControl = useCallback((targetPresenterPeerId: string) => {
+    signalingClientRef.current?.sendRemoteControlRequest(targetPresenterPeerId);
+    setChatMessages(prev => [
+      ...prev,
+      {
+        id: `sys-${Date.now()}`,
+        senderPeerId: 'system',
+        senderName: 'ShareIt System',
+        text: 'Requested remote control from the presenter. Waiting for approval...',
+        timestamp: Date.now(),
+        isSystem: true
+      }
+    ]);
+  }, []);
+
+  const respondRemoteControl = useCallback((accepted: boolean) => {
+    const pending = remoteControlState.pendingRequest;
+    if (!pending) return;
+
+    signalingClientRef.current?.sendRemoteControlResponse(pending.requesterPeerId, accepted);
+
+    if (accepted) {
+      setRemoteControlState(prev => ({
+        ...prev,
+        isBeingControlled: true,
+        activeControllerId: pending.requesterPeerId,
+        activeControllerName: pending.requesterName,
+        pendingRequest: null
+      }));
+      setChatMessages(prev => [
+        ...prev,
+        {
+          id: `sys-${Date.now()}`,
+          senderPeerId: 'system',
+          senderName: 'ShareIt System',
+          text: `You granted remote control to ${pending.requesterName}.`,
+          timestamp: Date.now(),
+          isSystem: true
+        }
+      ]);
+    } else {
+      setRemoteControlState(prev => ({ ...prev, pendingRequest: null }));
+    }
+  }, [remoteControlState.pendingRequest]);
+
+  const sendRemoteControlEvent = useCallback((evt: RemoteControlEvent) => {
+    if (!remoteControlState.isControlling || !remoteControlState.activeControllerId) return;
+
+    // Send through WebRTC DataChannel (fastest) or signaling fallback
+    const targetPeerId = remoteControlState.activeControllerId;
+    const msg = JSON.stringify({
+      type: 'remote-control-event',
+      event: evt,
+      targetPeerId
+    });
+
+    const sent = peerManagerRef.current?.sendData(msg, targetPeerId);
+    if (!sent) {
+      signalingClientRef.current?.sendRemoteControlEvent(targetPeerId, evt);
+    }
+  }, [remoteControlState.isControlling, remoteControlState.activeControllerId]);
+
+  const revokeRemoteControl = useCallback(() => {
+    if (remoteControlState.activeControllerId) {
+      signalingClientRef.current?.sendRemoteControlRevoke(remoteControlState.activeControllerId);
+    }
+    setRemoteControlState(prev => ({
+      ...prev,
+      isBeingControlled: false,
+      activeControllerId: null,
+      activeControllerName: null
+    }));
+  }, [remoteControlState.activeControllerId]);
+
+  const releaseRemoteControl = useCallback(() => {
+    if (remoteControlState.activeControllerId) {
+      signalingClientRef.current?.sendRemoteControlRelease(remoteControlState.activeControllerId);
+    }
+    setRemoteControlState(prev => ({
+      ...prev,
+      isControlling: false,
+      activeControllerId: null,
+      activeControllerName: null
+    }));
+  }, [remoteControlState.activeControllerId]);
+
   // Host Controls
   const hostMutePeer = useCallback((targetPeerId: string) => {
     if (isHost) {
@@ -525,6 +703,8 @@ export function useRoom() {
     chatMessages,
     unreadChatCount,
     fileTransfers,
+    remoteControlState,
+    incomingRemoteControlEvent,
     error,
     joinRoom,
     leaveRoom,
@@ -538,6 +718,11 @@ export function useRoom() {
     acceptFileTransfer,
     rejectFileTransfer,
     cancelFileTransfer,
+    requestRemoteControl,
+    respondRemoteControl,
+    sendRemoteControlEvent,
+    revokeRemoteControl,
+    releaseRemoteControl,
     hostMutePeer,
     hostKickPeer,
     hostToggleLock,

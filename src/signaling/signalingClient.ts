@@ -4,7 +4,7 @@
  * with transparent fallback to BroadcastChannel for local/multi-tab environments.
  */
 
-import { SignalingMessage, PeerInfo, ChatMessage } from './types';
+import { SignalingMessage, PeerInfo, ChatMessage, RemoteControlEvent } from './types';
 import { BroadcastSignalingProvider } from './broadcastSignaling';
 
 export type SignalingConnectionStatus =
@@ -26,6 +26,11 @@ export interface SignalingEvents {
   onChatMessage?: (message: ChatMessage) => void;
   onScreenState?: (peerId: string, isSharing: boolean) => void;
   onFileMessage?: (data: any) => void;
+  onRemoteControlRequest?: (requesterPeerId: string, requesterName: string) => void;
+  onRemoteControlResponse?: (accepted: boolean, presenterPeerId: string, presenterName: string) => void;
+  onRemoteControlEvent?: (event: RemoteControlEvent, senderPeerId: string) => void;
+  onRemoteControlRevoked?: () => void;
+  onRemoteControlReleased?: () => void;
   onForceMute?: (byHost: string) => void;
   onKicked?: (reason: string) => void;
   onRoomLockChanged?: (isLocked: boolean) => void;
@@ -249,6 +254,28 @@ export class SignalingClient {
         this.events.onFileMessage?.(data);
         break;
 
+      case 'remote-control-request':
+        this.events.onRemoteControlRequest?.(data.senderPeerId, data.senderName || 'Participant');
+        break;
+
+      case 'remote-control-response':
+        this.events.onRemoteControlResponse?.(!!data.accepted, data.senderPeerId, data.senderName || 'Presenter');
+        break;
+
+      case 'remote-control-event':
+        if (data.event) {
+          this.events.onRemoteControlEvent?.(data.event, data.senderPeerId);
+        }
+        break;
+
+      case 'remote-control-revoke':
+        this.events.onRemoteControlRevoked?.();
+        break;
+
+      case 'remote-control-release':
+        this.events.onRemoteControlReleased?.();
+        break;
+
       case 'force-mute':
         this.events.onForceMute?.(data.byHost || 'Host');
         break;
@@ -330,6 +357,27 @@ export class SignalingClient {
 
   public hostToggleLock(isLocked: boolean): void {
     this.send({ type: 'host-toggle-lock', isLocked });
+  }
+
+  // Remote Control methods
+  public sendRemoteControlRequest(targetPeerId: string): void {
+    this.send({ type: 'remote-control-request', targetPeerId });
+  }
+
+  public sendRemoteControlResponse(targetPeerId: string, accepted: boolean): void {
+    this.send({ type: 'remote-control-response', targetPeerId, accepted });
+  }
+
+  public sendRemoteControlEvent(targetPeerId: string, event: RemoteControlEvent): void {
+    this.send({ type: 'remote-control-event', targetPeerId, event });
+  }
+
+  public sendRemoteControlRevoke(targetPeerId: string): void {
+    this.send({ type: 'remote-control-revoke', targetPeerId });
+  }
+
+  public sendRemoteControlRelease(targetPeerId: string): void {
+    this.send({ type: 'remote-control-release', targetPeerId });
   }
 
   public disconnect(): void {

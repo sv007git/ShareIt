@@ -24,6 +24,11 @@ export type SignalingMessageType =
   | 'file-offer'
   | 'file-response'
   | 'file-chunk-ack'
+  | 'remote-control-request'
+  | 'remote-control-response'
+  | 'remote-control-event'
+  | 'remote-control-revoke'
+  | 'remote-control-release'
   | 'host-mute-peer'
   | 'force-mute'
   | 'host-kick-peer'
@@ -75,4 +80,38 @@ export interface FileTransferState {
   senderName: string;
   blobUrl?: string;
   errorMessage?: string;
+}
+
+export interface RemoteControlEvent {
+  action: 'move' | 'down' | 'up' | 'click' | 'dblclick' | 'wheel' | 'key' | 'draw' | 'laser';
+  x: number; // 0.0 to 1.0 (normalized percentage of presentation width)
+  y: number; // 0.0 to 1.0 (normalized percentage of presentation height)
+  button?: 'left' | 'right' | 'middle';
+  deltaX?: number;
+  deltaY?: number;
+  key?: string;
+  modifiers?: {
+    ctrl?: boolean;
+    alt?: boolean;
+    shift?: boolean;
+    meta?: boolean;
+  };
+  drawPoint?: {
+    color: string;
+    size: number;
+    isEnd?: boolean;
+  };
+  timestamp: number;
+}
+
+export interface RemoteControlState {
+  isControlling: boolean; // Am I controlling someone else's screen?
+  isBeingControlled: boolean; // Is someone else controlling my screen?
+  activeControllerId: string | null;
+  activeControllerName: string | null;
+  pendingRequest: {
+    requesterPeerId: string;
+    requesterName: string;
+  } | null;
+  controlMode: 'pointer' | 'laser' | 'draw';
 }

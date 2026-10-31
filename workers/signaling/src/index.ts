@@ -173,14 +173,20 @@ export class RoomDurableObject {
     const { type, targetPeerId } = data;
 
     switch (type) {
-      // 1-to-1 WebRTC Signaling: Offer, Answer, ICE Candidate
+      // 1-to-1 WebRTC Signaling & Remote Control
       case 'offer':
       case 'answer':
-      case 'ice-candidate': {
+      case 'ice-candidate':
+      case 'remote-control-request':
+      case 'remote-control-response':
+      case 'remote-control-event':
+      case 'remote-control-revoke':
+      case 'remote-control-release': {
         if (targetPeerId) {
           this.sendToPeer(targetPeerId, {
             ...data,
-            senderPeerId: session.peerId
+            senderPeerId: session.peerId,
+            senderName: session.name
           });
         }
         break;

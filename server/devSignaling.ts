@@ -177,12 +177,18 @@ function handleMessage(session: PeerSession, data: any) {
   switch (type) {
     case 'offer':
     case 'answer':
-    case 'ice-candidate': {
+    case 'ice-candidate':
+    case 'remote-control-request':
+    case 'remote-control-response':
+    case 'remote-control-event':
+    case 'remote-control-revoke':
+    case 'remote-control-release': {
       if (targetPeerId && room.has(targetPeerId)) {
         const target = room.get(targetPeerId);
         target?.socket.send(JSON.stringify({
           ...data,
-          senderPeerId: session.peerId
+          senderPeerId: session.peerId,
+          senderName: session.name
         }));
       }
       break;

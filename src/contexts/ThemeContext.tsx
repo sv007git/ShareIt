@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
-type Theme = 'dark' | 'light';
+export type Theme = 'dark' | 'light' | 'bw';
 
 interface ThemeContextType {
   theme: Theme;
@@ -13,24 +13,30 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [theme, setThemeState] = useState<Theme>(() => {
     const saved = localStorage.getItem('shareit_theme') as Theme;
-    if (saved === 'dark' || saved === 'light') return saved;
+    if (saved === 'dark' || saved === 'light' || saved === 'bw') return saved;
     return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
   });
 
   useEffect(() => {
     const root = document.documentElement;
+    root.classList.remove('dark', 'light', 'theme-bw');
+
     if (theme === 'dark') {
       root.classList.add('dark');
-      root.classList.remove('light');
+    } else if (theme === 'bw') {
+      root.classList.add('dark', 'theme-bw');
     } else {
       root.classList.add('light');
-      root.classList.remove('dark');
     }
     localStorage.setItem('shareit_theme', theme);
   }, [theme]);
 
   const toggleTheme = () => {
-    setThemeState(prev => (prev === 'dark' ? 'light' : 'dark'));
+    setThemeState((prev) => {
+      if (prev === 'dark') return 'bw';
+      if (prev === 'bw') return 'light';
+      return 'dark';
+    });
   };
 
   const setTheme = (newTheme: Theme) => {
