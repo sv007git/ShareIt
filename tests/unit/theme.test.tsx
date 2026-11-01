@@ -15,7 +15,7 @@ const ThemeTester = () => {
 };
 
 describe('Theme System with B&W Support', () => {
-  it('cycles from dark to bw to light and back to dark', () => {
+  it('allows selecting dark, bw, and light themes directly', () => {
     localStorage.clear();
     render(
       <ThemeProvider>
@@ -23,15 +23,21 @@ describe('Theme System with B&W Support', () => {
       </ThemeProvider>
     );
 
-    const toggleBtn = screen.getByRole('button', { name: /toggle theme/i });
     const themeDisplay = screen.getByTestId('current-theme');
+    const bwButton = screen.getByTitle(/Black & White High-Contrast Theme/i);
+    const darkButton = screen.getByTitle(/Dark Theme/i);
+    const lightButton = screen.getByTitle(/Light Theme/i);
 
-    // Default is dark
-    expect(['dark', 'light']).toContain(themeDisplay.textContent);
+    // Switch to B&W
+    fireEvent.click(bwButton);
+    expect(themeDisplay.textContent).toBe('bw');
 
-    // Toggle through themes
-    fireEvent.click(toggleBtn);
-    const nextTheme = themeDisplay.textContent;
-    expect(['bw', 'light', 'dark']).toContain(nextTheme);
+    // Switch to Light
+    fireEvent.click(lightButton);
+    expect(themeDisplay.textContent).toBe('light');
+
+    // Switch to Dark
+    fireEvent.click(darkButton);
+    expect(themeDisplay.textContent).toBe('dark');
   });
 });

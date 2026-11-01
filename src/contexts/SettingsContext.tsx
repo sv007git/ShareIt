@@ -24,7 +24,7 @@ const DEFAULT_SETTINGS: UserSettings = {
   isAudioOnlyDefault: false,
   mirrorSelfVideo: true,
   videoQuality: 'hd',
-  signalingUrl: import.meta.env.VITE_SIGNALING_SERVER || 'ws://localhost:8080',
+  signalingUrl: import.meta.env.VITE_SIGNALING_SERVER || '',
   customStunServers: import.meta.env.VITE_STUN_SERVERS || 'stun:stun.l.google.com:19302,stun:stun1.l.google.com:19302',
   customTurnServers: import.meta.env.VITE_TURN_SERVERS || '',
   turnUsername: import.meta.env.VITE_TURN_USERNAME || '',

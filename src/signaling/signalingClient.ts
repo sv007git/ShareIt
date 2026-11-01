@@ -1,11 +1,14 @@
 /**
  * Unified Signaling Client for ShareIt
- * Supports WebSocket (Cloudflare Worker Durable Object / Local Node ws)
- * with transparent fallback to BroadcastChannel for local/multi-tab environments.
+ * Connects over:
+ * 1. Global Public Cloud Relay (EMQX WSS) - default for zero-config cross-device meetings
+ * 2. Custom WebSocket Server (Cloudflare Worker Durable Object or Local Node ws)
+ * 3. In-Browser BroadcastChannel (offline / same-machine fallback)
  */
 
 import { SignalingMessage, PeerInfo, ChatMessage, RemoteControlEvent } from './types';
 import { BroadcastSignalingProvider } from './broadcastSignaling';
+import { MqttSignalingProvider } from './mqttSignaling';
 
 export type SignalingConnectionStatus =
   | 'idle'
@@ -40,6 +43,7 @@ export interface SignalingEvents {
 
 export class SignalingClient {
   private socket: WebSocket | null = null;
+  private mqttProvider: MqttSignalingProvider | null = null;
   private broadcastProvider: BroadcastSignalingProvider | null = null;
   private roomId: string;
   private peerId: string;
@@ -50,7 +54,6 @@ export class SignalingClient {
   private status: SignalingConnectionStatus = 'idle';
   private pingInterval: any = null;
   private isDestroyed: boolean = false;
-  private useFallbackOnly: boolean = false;
 
   constructor(
     roomId: string,
@@ -66,9 +69,8 @@ export class SignalingClient {
     this.isAudioOnly = isAudioOnly;
     this.events = events;
 
-    // Determine default server URL: from argument, or env var, or fallback
     const envServer = import.meta.env.VITE_SIGNALING_SERVER;
-    this.serverUrl = serverUrl || envServer || 'ws://localhost:8080';
+    this.serverUrl = (serverUrl || envServer || '').trim();
   }
 
   public getStatus(): SignalingConnectionStatus {
@@ -84,19 +86,22 @@ export class SignalingClient {
     if (this.isDestroyed) return;
     this.setStatus('connecting');
 
-    // If explicit fallback requested or serverUrl is empty / invalid
-    if (this.useFallbackOnly || !this.serverUrl) {
-      this.connectFallback();
+    // If a custom WebSocket server is explicitly specified, try it first
+    if (this.serverUrl && (this.serverUrl.startsWith('ws://') || this.serverUrl.startsWith('wss://') || this.serverUrl.startsWith('http'))) {
+      this.connectCustomWebSocket();
       return;
     }
 
+    // Otherwise, default to Global Cloud Relay (connects users across any device on GitHub Pages!)
+    this.connectCloudRelay();
+  }
+
+  private connectCustomWebSocket(): void {
     try {
-      // Build WebSocket URL with query params
       const wsUrl = new URL(this.serverUrl);
       if (wsUrl.protocol === 'http:') wsUrl.protocol = 'ws:';
       if (wsUrl.protocol === 'https:') wsUrl.protocol = 'wss:';
 
-      // Ensure /ws path
       if (!wsUrl.pathname.endsWith('/ws')) {
         wsUrl.pathname = wsUrl.pathname.replace(/\/$/, '') + '/ws';
       }
@@ -110,18 +115,17 @@ export class SignalingClient {
 
       const connectionTimeout = setTimeout(() => {
         if (this.socket && this.socket.readyState !== WebSocket.OPEN) {
-          console.warn('[Signaling] WebSocket connection timed out, switching to local broadcast fallback');
+          console.warn('[Signaling] Custom WebSocket timed out, falling back to Cloud Relay');
           this.socket.close();
-          this.connectFallback();
+          this.connectCloudRelay();
         }
-      }, 4000);
+      }, 3500);
 
       this.socket.onopen = () => {
         clearTimeout(connectionTimeout);
         this.setStatus('connected');
-        console.log('[Signaling] Connected to WebSocket signaling server:', wsUrl.toString());
+        console.log('[Signaling] Connected to Custom WebSocket Server');
 
-        // Heartbeat
         this.pingInterval = setInterval(() => {
           if (this.socket?.readyState === WebSocket.OPEN) {
             this.socket.send(JSON.stringify({ type: 'ping' }));
@@ -138,37 +142,60 @@ export class SignalingClient {
         }
       };
 
-      this.socket.onerror = (err) => {
-        console.warn('[Signaling] WebSocket error, fallback may be activated', err);
+      this.socket.onerror = () => {
         clearTimeout(connectionTimeout);
         if (this.status === 'connecting') {
-          this.connectFallback();
+          this.connectCloudRelay();
         }
       };
 
-      this.socket.onclose = (event) => {
+      this.socket.onclose = () => {
         clearInterval(this.pingInterval);
-        if (!this.isDestroyed) {
-          if (this.status === 'connecting') {
-            this.connectFallback();
-          } else if (this.status === 'connected') {
-            this.setStatus('disconnected');
-            // Try reconnecting or fallback
-            setTimeout(() => {
-              if (!this.isDestroyed && this.status === 'disconnected') {
-                this.connect();
-              }
-            }, 3000);
-          }
+        if (!this.isDestroyed && this.status === 'connecting') {
+          this.connectCloudRelay();
         }
       };
     } catch (err) {
-      console.warn('[Signaling] Failed to initialize WebSocket, falling back to BroadcastChannel:', err);
-      this.connectFallback();
+      console.warn('[Signaling] Failed custom WebSocket init, falling back to Cloud Relay:', err);
+      this.connectCloudRelay();
     }
   }
 
-  private async connectFallback() {
+  private async connectCloudRelay(): Promise<void> {
+    if (this.isDestroyed) return;
+    console.log(`[Signaling] Connecting to Global Cloud Relay for room ${this.roomId}...`);
+
+    try {
+      this.mqttProvider = new MqttSignalingProvider(
+        this.roomId,
+        this.peerId,
+        this.name,
+        this.isAudioOnly,
+        (status) => {
+          if (status === 'connected') {
+            this.setStatus('connected');
+          } else if (status === 'error' && this.status === 'connecting') {
+            this.connectBroadcastFallback();
+          }
+        }
+      );
+
+      const result = await this.mqttProvider.connect((msg) => {
+        this.dispatchMessage(msg);
+      });
+
+      this.events.onJoinedRoom?.({
+        isHost: result.isHost,
+        existingPeers: result.existingPeers,
+        isLocked: false,
+      });
+    } catch (err) {
+      console.warn('[Signaling] Cloud relay failed, falling back to local broadcast:', err);
+      this.connectBroadcastFallback();
+    }
+  }
+
+  private async connectBroadcastFallback(): Promise<void> {
     if (this.isDestroyed) return;
     console.log(`[Signaling] Activating local multi-tab BroadcastChannel fallback for room ${this.roomId}`);
     this.setStatus('fallback');
@@ -187,7 +214,7 @@ export class SignalingClient {
     this.events.onJoinedRoom?.({
       isHost: result.isHost,
       existingPeers: result.existingPeers,
-      isLocked: false
+      isLocked: false,
     });
   }
 
@@ -199,7 +226,7 @@ export class SignalingClient {
         this.events.onJoinedRoom?.({
           isHost: data.isHost,
           existingPeers: data.existingPeers || [],
-          isLocked: !!data.isLocked
+          isLocked: !!data.isLocked,
         });
         break;
 
@@ -208,7 +235,7 @@ export class SignalingClient {
           peerId: data.peerId,
           name: data.name,
           isHost: !!data.isHost,
-          isAudioOnly: !!data.isAudioOnly
+          isAudioOnly: !!data.isAudioOnly,
         });
         break;
 
@@ -244,7 +271,7 @@ export class SignalingClient {
           senderPeerId: data.senderPeerId,
           senderName: data.senderName,
           text: data.text,
-          timestamp: data.timestamp
+          timestamp: data.timestamp,
         });
         break;
 
@@ -297,11 +324,9 @@ export class SignalingClient {
         break;
 
       case 'pong':
-        // Pong received, connection healthy
         break;
 
       default:
-        // Unknown type
         break;
     }
   }
@@ -313,6 +338,8 @@ export class SignalingClient {
       } catch (err) {
         console.error('[Signaling] Failed to send WebSocket message', err);
       }
+    } else if (this.mqttProvider) {
+      this.mqttProvider.send(message);
     } else if (this.broadcastProvider) {
       this.broadcastProvider.send(message);
     }
@@ -336,7 +363,7 @@ export class SignalingClient {
   }
 
   public sendChatMessage(text: string): void {
-    this.send({ type: 'chat', text });
+    this.send({ type: 'chat-message', text, id: `msg-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`, timestamp: Date.now() });
   }
 
   public sendFileOffer(fileMeta: any, targetPeerId?: string): void {
@@ -386,6 +413,10 @@ export class SignalingClient {
     if (this.socket) {
       this.socket.close();
       this.socket = null;
+    }
+    if (this.mqttProvider) {
+      this.mqttProvider.close();
+      this.mqttProvider = null;
     }
     if (this.broadcastProvider) {
       this.broadcastProvider.close();

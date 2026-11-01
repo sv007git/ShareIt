@@ -36,56 +36,86 @@
   }
 }
 
-/* B&W Theme Overrides */
+/* =========================================================================
+   BLACK & WHITE MONOCHROME THEME OVERRIDES (theme-bw)
+   Ensures 100% pure high-contrast black & white across all views
+   ========================================================================= */
+
+html.theme-bw,
 html.theme-bw body {
   background-color: #000000 !important;
   color: #ffffff !important;
 }
 
-html.theme-bw .bg-surface-950 {
+html.theme-bw .bg-surface-950,
+html.theme-bw [class*="bg-surface-950"] {
   background-color: #000000 !important;
 }
 
-html.theme-bw .bg-surface-900 {
-  background-color: #0c0c0c !important;
-  border-color: #262626 !important;
+html.theme-bw .bg-surface-900,
+html.theme-bw [class*="bg-surface-900"],
+html.theme-bw .bg-surface-800,
+html.theme-bw [class*="bg-surface-800"] {
+  background-color: #0a0a0a !important;
+  border-color: #27272a !important;
 }
 
-html.theme-bw .bg-surface-800 {
-  background-color: #171717 !important;
-  border-color: #333333 !important;
-}
-
-html.theme-bw .border-surface-800,
+html.theme-bw [class*="border-surface-"],
 html.theme-bw .border-surface-700,
-html.theme-bw .border-surface-750 {
-  border-color: #262626 !important;
+html.theme-bw .border-surface-800 {
+  border-color: #27272a !important;
+}
+
+html.theme-bw .text-brand-400,
+html.theme-bw .text-brand-300,
+html.theme-bw .text-sky-400,
+html.theme-bw [class*="text-brand-"] {
+  color: #ffffff !important;
 }
 
 html.theme-bw .bg-brand-500,
-html.theme-bw .bg-brand-600 {
+html.theme-bw [class*="bg-brand-500"] {
   background-color: #ffffff !important;
   color: #000000 !important;
   border-color: #ffffff !important;
 }
 
-html.theme-bw .hover\:bg-brand-600:hover {
-  background-color: #e5e5e5 !important;
+html.theme-bw .bg-brand-500:hover,
+html.theme-bw [class*="bg-brand-500"]:hover {
+  background-color: #e4e4e7 !important;
   color: #000000 !important;
 }
 
-html.theme-bw .text-brand-400,
-html.theme-bw .text-brand-300,
-html.theme-bw .text-sky-400 {
+html.theme-bw .bg-brand-500 svg,
+html.theme-bw [class*="bg-brand-500"] svg {
+  color: #000000 !important;
+  stroke: #000000 !important;
+}
+
+html.theme-bw .text-emerald-400,
+html.theme-bw .text-amber-400 {
+  color: #e4e4e7 !important;
+}
+
+html.theme-bw h1,
+html.theme-bw h2,
+html.theme-bw h3,
+html.theme-bw h4 {
   color: #ffffff !important;
+  background-image: none !important;
+  -webkit-text-fill-color: #ffffff !important;
 }
 
 html.theme-bw .bg-gradient-to-r,
 html.theme-bw .bg-gradient-to-tr,
 html.theme-bw .bg-gradient-to-br {
   background-image: none !important;
-  color: #ffffff !important;
-  -webkit-text-fill-color: #ffffff !important;
+}
+
+/* Video tile borders in B&W mode */
+html.theme-bw .shadow-glow-brand {
+  box-shadow: 0 0 0 2px #ffffff !important;
+  border-color: #ffffff !important;
 }
 
 /* Mobile Safe Area and Viewport Adjustments */
