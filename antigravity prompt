@@ -1,0 +1,248 @@
+================================================================================
+                      SHAREIT - ANTIGRAVITY PROJECT PROMPT & SPECIFICATION
+================================================================================
+Document Type: Master Architectural Specification & Knowledge Base
+Created: November 2026
+Target System: Antigravity AI Agent & Engineering Team
+Project Name: ShareIt (Browser-Based Screen Sharing & Conferencing Platform)
+Repository: https://github.com/sv007git/ShareIt
+Target URL: https://sv007git.github.io/ShareIt/
+Deployment Platform: GitHub Pages (Pure Static Frontend)
+Branch Strategy: 
+  - `main`: Full source code, tests, CI/CD workflows, configuration
+  - `gh-pages`: Compiled static production build output (`dist/`)
+
+--------------------------------------------------------------------------------
+1. EXECUTIVE OVERVIEW & PURPOSE
+--------------------------------------------------------------------------------
+ShareIt is a production-grade, zero-install, browser-based communication and 
+screen-sharing platform. Users can create or join encrypted meetings instantly 
+without account registration, downloads, or plugins.
+
+Core Capabilities:
+1. Ultra-fast real-time screen sharing (Full screen, application window, browser tab)
+   with audio capture where supported by the browser/OS.
+2. Two-way interactive Remote Screen Control:
+   - Presenter authorization dialog ("Grant Control" / "Deny").
+   - Remote mouse pointer visualization with click ripples and coordinate sync.
+   - Collaborative canvas telestrator pen for markup directly over the screen.
+   - Remote keypress visualization and presenter emergency revocation ("Esc" key or button).
+3. Real-time video and audio calling with device switching (mic, camera, speaker) 
+   and front/back camera toggling on mobile.
+4. Simultaneous screen and camera sharing with floating webcam picture-in-picture.
+5. In-meeting real-time texting chat:
+   - Side-by-side docked panel on desktop (does not obscure the video/screen).
+   - Touch-friendly sliding sheet on mobile.
+   - Heads-up toast notifications with instant inline quick-reply.
+6. Direct Peer-to-Peer Chunked File Sharing (16KB binary chunks over WebRTC DataChannel)
+   with explicit user Accept/Decline security prompts (never auto-accepts files).
+7. Three-Way Dynamic Theme Engine:
+   - Dark Theme: Classic Deep Navy (#090d16 / #0f172a) with Azure Blue accents (#0c87eb).
+   - Black & White Monochrome Theme: Pure AMOLED Black (#000000), Stark White (#ffffff),
+     razor borders (#27272a), high-contrast black text on white buttons.
+   - Light Theme: Crisp Clean White (#ffffff) and Soft Canvas (#f8fafc) with dark slate text.
+8. Mobile-responsive across Android (Chrome/Firefox) and iOS/iPadOS (Safari).
+
+--------------------------------------------------------------------------------
+2. TECHNICAL ARCHITECTURE & STACK
+--------------------------------------------------------------------------------
+Frontend Stack:
+- Framework: React 18 with TypeScript (Strict mode enabled)
+- Bundler & Tooling: Vite 8 (Rolldown runtime)
+- Styling: Tailwind CSS v3 with CSS Variable RGB channel mapping
+- Icons: Lucide React
+- Testing Framework: Vitest with jsdom (18 unit/integration tests passing)
+- Hash Routing: Hash-based routing (`/#/room/:roomId`) compatible with GitHub Pages
+
+WebRTC & Media Pipeline:
+- Native WebRTC APIs: `RTCPeerConnection`, `MediaDevices`, `getDisplayMedia`, `getUserMedia`.
+- MediaStream Management: Handled via `src/webrtc/mediaManager.ts`. Handles dynamic track
+  replacement (`replaceTrack`), automatic webcam restoration when screen share ends,
+  and graceful device permission denial handling.
+- Multi-Peer Mesh Topology: Managed via `src/webrtc/peerManager.ts` with ICE candidate queueing
+  prior to remote description establishment.
+- NAT Traversal & ICE: Configured in `src/webrtc/iceConfig.ts` with free Google STUN servers
+  (`stun:stun.l.google.com:19302`, `stun:stun1.l.google.com:19302`) and user-configurable TURN.
+
+Zero-Backend Global Cloud Signaling Architecture:
+IMPORTANT: GitHub Pages is a static file host; it cannot execute Node.js, run WebSockets,
+or run persistent server processes.
+To enable multi-device communication over the internet without requiring users to host their
+own server, ShareIt implements a 3-tier signaling strategy in `src/signaling/signalingClient.ts`:
+  Tier 1 (Global Cloud Relay - Default):
+    `src/signaling/mqttSignaling.ts`: Connects to public secure WebSocket MQTT brokers
+    (`wss://broker.emqx.io:8084/mqtt`) scoping rooms to `shareit/v2/rooms/${roomId}`.
+    Enables instant peer discovery across different computers, mobile devices, and Wi-Fi networks.
+  Tier 2 (Custom Self-Hosted WebSocket):
+    Connects to any RFC-compliant WebSocket server configured in Settings.
+  Tier 3 (Local Same-Machine Fallback):
+    `src/signaling/broadcastSignaling.ts`: Uses browser `BroadcastChannel` for offline
+    testing between tabs on the same machine.
+
+--------------------------------------------------------------------------------
+3. THEME SYSTEM SPECIFICATION & IMPLEMENTATION
+--------------------------------------------------------------------------------
+The theme system allows seamless switching between 'dark', 'bw', and 'light'.
+
+How it works under the hood:
+1. `src/contexts/ThemeContext.tsx`:
+   - Stores current theme in `localStorage.getItem('shareit_theme')`.
+   - Modifies document root classes:
+     * Dark: `html.dark`
+     * B&W: `html.dark.theme-bw`
+     * Light: `html.light`
+2. `src/index.css`:
+   - Defines CSS custom properties in space-separated RGB triplet format:
+     * Dark: `--color-surface-950: 9 13 22;`, `--color-surface-900: 15 23 42;`, etc.
+     * Light: `--color-surface-950: 248 250 252;`, `--color-surface-900: 255 255 255;`, etc.
+     * B&W: `--color-surface-950: 0 0 0;`, `--color-surface-900: 10 10 10;`, `--color-brand-500: 255 255 255;`
+3. `tailwind.config.js`:
+   - Colors are defined with alpha placeholders:
+     `surface: { 950: 'rgb(var(--color-surface-950) / <alpha-value>)', ... }`
+   - This ensures all Tailwind opacity modifier classes (e.g. `bg-surface-950/80`,
+     `border-surface-700/80`, `bg-surface-900/90`) work dynamically across all themes!
+4. Black & White Contrast Rules:
+   - When in `theme-bw`, `.bg-brand-500` buttons turn solid white (#ffffff).
+   - Rules in `src/index.css` force button text and SVG icons to pure black (#000000)
+     to maintain 100% contrast.
+   - All headings (`h1` through `h4`) render in stark white with gradient overlays stripped.
+
+--------------------------------------------------------------------------------
+4. COMPLETE PROJECT FILE STRUCTURE & ROLES
+--------------------------------------------------------------------------------
+ShareIT/
+├── .github/
+│   └── workflows/
+│       └── deploy.yml              # Automated GitHub Actions workflow to build & deploy to gh-pages
+├── public/
+│   ├── 404.html                    # GitHub Pages SPA redirect fallback
+│   ├── .nojekyll                   # Disables GitHub Pages Jekyll static generation
+│   ├── favicon.ico                 # ShareIt screen-sharing brand favicon
+│   └── logo.svg                    # SVG vector screen-sharing logo
+├── src/
+│   ├── components/
+│   │   ├── collaboration/
+│   │   │   └── RemoteControlOverlay.tsx  # Remote cursor, click ripples, telestrator pen, and key notifications
+│   │   ├── common/
+│   │   │   ├── Badge.tsx           # Status pills (brand, success, danger, neutral)
+│   │   │   ├── Button.tsx          # Multi-variant button (primary, secondary, danger, ghost, outline)
+│   │   │   ├── Input.tsx           # Form inputs with semantic surface colors and focus rings
+│   │   │   ├── Modal.tsx           # Animated dialog wrapper with backdrop blur and escape listener
+│   │   │   └── ThemeToggle.tsx     # 3-segment theme switcher ([ Dark | B&W | Light ])
+│   │   ├── landing/
+│   │   │   └── LandingPage.tsx     # Exact landing page UI matching screenshot (zero excess clutter)
+│   │   ├── meeting/
+│   │   │   ├── ControlBar.tsx      # Bottom docked dock with media, screenshare, chat, and settings triggers
+│   │   │   ├── FloatingWebcamTile.tsx # Picture-in-picture presenter camera overlay
+│   │   │   ├── MeetingHeader.tsx   # Top meeting bar with room code copy, duration timer, lock status, and ThemeToggle
+│   │   │   ├── RemoteControlOverlay.tsx # Overlay for presenter and controller collaboration
+│   │   │   ├── ScreenShareView.tsx # Main presentation stage with stop sharing & remote control controls
+│   │   │   ├── VideoGrid.tsx       # Auto-adapting CSS grid (1 to 12 participants)
+│   │   │   └── VideoTile.tsx       # Participant video tile with audio detection ring and host moderation
+│   │   ├── panels/
+│   │   │   ├── ChatPanel.tsx       # In-meeting text chat panel (embedded side-by-side or sliding overlay)
+│   │   │   ├── FileSharePanel.tsx  # P2P file transfer panel with drag-and-drop and accept/reject prompt
+│   │   │   ├── LiveChatToast.tsx   # Floating notification badge for new chat messages with inline reply
+│   │   │   └── SettingsModal.tsx   # Modal for Audio/Video devices, Video quality, Theme, and ICE/Signaling
+│   │   └── prejoin/
+│   │   │   ├── AudioMeter.tsx      # Real-time microphone audio visualizer
+│   │   │   ├── DeviceSelector.tsx  # Dropdown selector for microphones, cameras, and speakers
+│   │   │   └── GreenRoom.tsx       # Pre-join preview screen with camera test, mic meter, and ThemeToggle
+│   │   ├── contexts/
+│   │   │   ├── SettingsContext.tsx # User settings persistence (displayName, devices, audio-only, signaling)
+│   │   │   └── ThemeContext.tsx    # Theme state management ('dark' | 'bw' | 'light')
+│   │   ├── hooks/
+│   │   │   ├── useAudioLevel.ts    # Web Audio API AnalyserNode volume meter and speaking detection
+│   │   │   ├── useMediaDevices.ts  # Device enumeration (`navigator.mediaDevices.enumerateDevices`)
+│   │   │   └── useRoom.ts          # Central state coordinator binding signaling, media, peers, chat, and files
+│   │   ├── pages/
+│   │   │   └── MeetingRoomPage.tsx # In-meeting orchestrator coordinating viewport, panels, and modals
+│   │   ├── services/
+│   │   │   └── fileTransferService.ts # 16KB chunked WebRTC DataChannel file sender and reassembler
+│   │   ├── signaling/
+│   │   │   ├── broadcastSignaling.ts # Local BroadcastChannel signaling provider
+│   │   │   ├── mqttSignaling.ts    # Global WSS MQTT signaling provider for cross-device connections
+│   │   │   ├── signalingClient.ts  # Multi-tier signaling client with automatic fallback
+│   │   │   └── types.ts            # TypeScript interfaces for signaling messages, chat, and remote control
+│   │   ├── utils/
+│   │   │   ├── deviceDetect.ts     # Detection for mobile, iOS Safari, screen share capability, and audio switching
+│   │   │   ├── formatters.ts       # Byte sizing, timestamp formatting, call duration timer, and `cn()` utility
+│   │   │   └── idGenerator.ts      # Human-friendly room ID generator (`share-xxx-yyy`) and sanitizer
+│   │   ├── webrtc/
+│   │   │   ├── iceConfig.ts        # STUN/TURN server configuration generator
+│   │   │   ├── mediaManager.ts     # Local camera, mic, and screen capture lifecycle manager
+│   │   │   └── peerManager.ts      # Peer connection coordinator and DataChannel manager
+│   │   ├── App.tsx                 # Root application component with hash routing
+│   │   ├── index.css               # Tailwind directives, theme variables, scrollbars, and keyframes
+│   │   └── main.tsx                # React DOM entry point
+│   ├── tests/
+│   │   └── unit/
+│   │       ├── components.test.tsx      # Unit tests for UI components
+│   │       ├── deviceDetect.test.ts    # Capability detection tests
+│   │       ├── fileTransferService.test.ts # File chunking and checksum tests
+│   │       ├── formatters.test.ts      # Helper function tests
+│   │       ├── iceConfig.test.ts       # ICE server construction tests
+│   │       ├── idGenerator.test.ts     # Room ID regex and sanitization tests
+│   │       ├── remoteControl.test.ts   # Remote control event serialization tests
+│   │       └── theme.test.tsx          # ThemeContext switching tests
+│   ├── package.json
+│   ├── tailwind.config.js
+│   ├── tsconfig.json
+│   └── vite.config.ts
+
+--------------------------------------------------------------------------------
+5. USER-DEFINED DESIGN RULES & INVARIANTS
+--------------------------------------------------------------------------------
+Rule 1: Landing Page UI Purity
+  The landing page (`src/components/landing/LandingPage.tsx`) MUST strictly match the
+  user's screenshot design:
+  - Header: Logo icon + "ShareIt" brand, navigation links (Features, How It Works, Devices, FAQ),
+    ThemeToggle, and "Start Sharing" button.
+  - Hero: "Connect with anyone, anywhere." headline, clean subtitle text.
+  - Centered Action Card:
+    * Left side ("NEW MEETING"): Read-only generated room ID with copy button, and "Start Sharing" button.
+    * Right side ("JOIN WITH CODE"): Text input with placeholder "e.g. share-xyz-123" and "Join Meeting" button.
+    * Card Footer: 3 feature badges: "No install needed", "End-to-end encrypted", "100% Free".
+  - DO NOT add marketing feature blocks, accordion FAQs, testimonials, or device cards to the landing page.
+
+Rule 2: Global Theme Consistency
+  Every view (Landing Page, Green Room, Meeting Stage, Video Grid, Video Tiles, Control Bar,
+  Header, Chat, Participants, File Sharing, Settings, and Dialogs) MUST follow the active theme.
+  Never hardcode `#090d16` or `text-white` on surfaces that change in light mode. Use semantic
+  `bg-surface-*` and `text-surface-*` classes so that switching between Dark, B&W, and Light
+  instantly updates the entire interface.
+
+Rule 3: Cross-Device Signaling Reliability
+  Do not default signaling to `localhost:8080`. The default signaling is the global cloud relay
+  `MqttSignalingProvider` connecting over `wss://broker.emqx.io:8084/mqtt`, allowing participants
+  on any device, phone, or remote network to connect seamlessly on GitHub Pages.
+
+Rule 4: File Sharing Security
+  Incoming files sent over WebRTC data channels must display an explicit "Accept / Reject" prompt.
+  Never automatically download files onto the user's disk without consent.
+
+--------------------------------------------------------------------------------
+6. CLI COMMANDS & WORKFLOW CHEATSHEET
+--------------------------------------------------------------------------------
+Development:
+  - Install dependencies: `npm install`
+  - Start local dev server: `npm run dev`
+  - Run Vitest tests: `npm test`
+  - Build TypeScript & bundle: `npm run build`
+
+Deployment:
+  - Deploy to GitHub Pages: `npm run deploy` (Runs `gh-pages -d dist`)
+  - Automated CI/CD: Pushing to `main` triggers `.github/workflows/deploy.yml` which
+    builds the project and publishes to the `gh-pages` branch.
+
+PowerShell Syntax Note:
+  On Windows PowerShell, do not chain commands with `&&`. Use semicolon `;` instead:
+  `npm test; npm run build`
+
+Vite 8 Rolldown Configuration Note:
+  In `vite.config.ts`, `build.rollupOptions.output.manualChunks` must be a function:
+  `manualChunks(id) { ... }` rather than an object map.
+
+================================================================================
+END OF SPECIFICATION - READY FOR DIRECT CONSUMPTION BY ANTIGRAVITY AGENTS
+================================================================================

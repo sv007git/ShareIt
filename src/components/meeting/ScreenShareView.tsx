@@ -93,7 +93,7 @@ export const ScreenShareView: React.FC<ScreenShareViewProps> = ({
       <div className="absolute top-4 inset-x-4 flex items-center justify-between pointer-events-none z-20">
         <div className="flex items-center gap-2 pointer-events-auto bg-surface-900/90 backdrop-blur-md px-3.5 py-1.5 rounded-xl border border-surface-700/80 shadow-lg">
           <Monitor className="w-4 h-4 text-brand-400 shrink-0" />
-          <span className="text-xs font-semibold text-white">
+          <span className="text-xs font-semibold text-surface-100">
             {isLocal ? 'You are sharing your screen' : `${presenterName} is sharing their screen`}
           </span>
           <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse ml-1 shrink-0" />
@@ -143,7 +143,7 @@ export const ScreenShareView: React.FC<ScreenShareViewProps> = ({
           {/* Fullscreen toggle */}
           <button
             onClick={toggleFullscreen}
-            className="p-2 rounded-xl bg-surface-900/90 text-surface-200 hover:text-white border border-surface-700/80 backdrop-blur-md transition-colors"
+            className="p-2 rounded-xl bg-surface-900/90 text-surface-200 hover:text-surface-100 border border-surface-700/80 backdrop-blur-md transition-colors"
             title={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
           >
             {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}

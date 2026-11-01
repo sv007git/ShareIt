@@ -56,12 +56,12 @@ export const Modal: React.FC<ModalProps> = ({
       >
         <div className="flex items-center justify-between pb-3 border-b border-surface-800">
           <div>
-            {title && <h3 className="text-lg font-bold text-white tracking-tight">{title}</h3>}
+            {title && <h3 className="text-lg font-bold text-surface-100 tracking-tight">{title}</h3>}
             {description && <p className="text-xs text-surface-400 mt-0.5">{description}</p>}
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-surface-400 hover:text-white hover:bg-surface-800 transition-colors"
+            className="p-1.5 rounded-lg text-surface-400 hover:text-surface-100 hover:bg-surface-800 transition-colors"
             aria-label="Close dialog"
           >
             <X className="w-5 h-5" />

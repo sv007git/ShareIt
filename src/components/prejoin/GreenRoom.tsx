@@ -3,6 +3,7 @@ import { Video, VideoOff, Mic, MicOff, Settings, Copy, Check, Users, Shield, Hea
 import { Button } from '../common/Button';
 import { Input } from '../common/Input';
 import { Badge } from '../common/Badge';
+import { ThemeToggle } from '../common/ThemeToggle';
 import { AudioMeter } from './AudioMeter';
 import { DeviceSelector } from './DeviceSelector';
 import { useAudioLevel } from '../../hooks/useAudioLevel';
@@ -135,7 +136,7 @@ export const GreenRoom: React.FC<GreenRoomProps> = ({ roomId, onJoin, onCancel }
               <Users className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-white tracking-tight">Ready to join?</h2>
+              <h2 className="text-xl font-bold text-surface-100 tracking-tight">Ready to join?</h2>
               <div className="flex items-center gap-2 mt-0.5">
                 <span className="text-xs text-surface-400">Room:</span>
                 <span className="text-xs font-mono font-semibold text-brand-400">{roomId}</span>
@@ -148,6 +149,7 @@ export const GreenRoom: React.FC<GreenRoomProps> = ({ roomId, onJoin, onCancel }
           </div>
 
           <div className="flex items-center gap-2">
+            <ThemeToggle />
             <Button
               variant="secondary"
               size="sm"

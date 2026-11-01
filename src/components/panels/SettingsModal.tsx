@@ -3,6 +3,7 @@ import { Mic, Video, Volume2, Globe, Shield, Bell } from 'lucide-react';
 import { Modal } from '../common/Modal';
 import { Input } from '../common/Input';
 import { Button } from '../common/Button';
+import { ThemeToggle } from '../common/ThemeToggle';
 import { AudioMeter } from '../prejoin/AudioMeter';
 import { useAudioLevel } from '../../hooks/useAudioLevel';
 import { useMediaDevices } from '../../hooks/useMediaDevices';
@@ -79,7 +80,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           className={`flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold border-b-2 transition-colors ${
             activeTab === 'audio'
               ? 'border-brand-500 text-brand-400'
-              : 'border-transparent text-surface-400 hover:text-white'
+              : 'border-transparent text-surface-400 hover:text-surface-100'
           }`}
         >
           <Mic className="w-3.5 h-3.5" /> Audio
@@ -89,7 +90,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           className={`flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold border-b-2 transition-colors ${
             activeTab === 'video'
               ? 'border-brand-500 text-brand-400'
-              : 'border-transparent text-surface-400 hover:text-white'
+              : 'border-transparent text-surface-400 hover:text-surface-100'
           }`}
         >
           <Video className="w-3.5 h-3.5" /> Video
@@ -99,7 +100,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           className={`flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold border-b-2 transition-colors ${
             activeTab === 'general'
               ? 'border-brand-500 text-brand-400'
-              : 'border-transparent text-surface-400 hover:text-white'
+              : 'border-transparent text-surface-400 hover:text-surface-100'
           }`}
         >
           <Bell className="w-3.5 h-3.5" /> General
@@ -109,7 +110,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           className={`flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold border-b-2 transition-colors ${
             activeTab === 'network'
               ? 'border-brand-500 text-brand-400'
-              : 'border-transparent text-surface-400 hover:text-white'
+              : 'border-transparent text-surface-400 hover:text-surface-100'
           }`}
         >
           <Globe className="w-3.5 h-3.5" /> Network & ICE
@@ -127,7 +128,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 updateSettings({ audioInputId: e.target.value });
                 onMicChange?.(e.target.value);
               }}
-              className="w-full bg-surface-950 border border-surface-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-500"
+              className="w-full bg-surface-950 border border-surface-700 rounded-xl px-3 py-2 text-xs text-surface-100 focus:outline-none focus:border-brand-500"
             >
               {audioInputs.map((d) => (
                 <option key={d.deviceId} value={d.deviceId}>
@@ -149,7 +150,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               <select
                 value={settings.audioOutputId}
                 onChange={(e) => updateSettings({ audioOutputId: e.target.value })}
-                className="w-full bg-surface-950 border border-surface-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-500"
+                className="w-full bg-surface-950 border border-surface-700 rounded-xl px-3 py-2 text-xs text-surface-100 focus:outline-none focus:border-brand-500"
               >
                 {audioOutputs.map((d) => (
                   <option key={d.deviceId} value={d.deviceId}>
@@ -173,7 +174,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 updateSettings({ videoInputId: e.target.value });
                 onCameraChange?.(e.target.value);
               }}
-              className="w-full bg-surface-950 border border-surface-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-500"
+              className="w-full bg-surface-950 border border-surface-700 rounded-xl px-3 py-2 text-xs text-surface-100 focus:outline-none focus:border-brand-500"
             >
               {videoInputs.map((d) => (
                 <option key={d.deviceId} value={d.deviceId}>
@@ -200,7 +201,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               <select
                 value={settings.videoQuality}
                 onChange={(e) => updateSettings({ videoQuality: e.target.value as any })}
-                className="w-full bg-surface-950 border border-surface-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-500"
+                className="w-full bg-surface-950 border border-surface-700 rounded-xl px-3 py-2 text-xs text-surface-100 focus:outline-none focus:border-brand-500"
               >
                 <option value="hd">HD (720p 30fps) - Recommended</option>
                 <option value="fhd">Full HD (1080p 30fps)</option>
@@ -230,6 +231,15 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             onChange={(e) => updateSettings({ displayName: e.target.value })}
             placeholder="Alex Hunter"
           />
+
+          {/* Theme / Appearance Selection */}
+          <div className="flex items-center justify-between p-3.5 bg-surface-950 rounded-xl border border-surface-800">
+            <div>
+              <p className="text-xs font-semibold text-surface-200">Theme Appearance</p>
+              <p className="text-[11px] text-surface-400">Choose between Classic Dark, B&W Monochrome, or Light</p>
+            </div>
+            <ThemeToggle />
+          </div>
 
           <div className="flex items-center justify-between p-3.5 bg-surface-950 rounded-xl border border-surface-800">
             <div>

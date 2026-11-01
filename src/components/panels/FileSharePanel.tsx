@@ -46,12 +46,12 @@ export const FileSharePanel: React.FC<FileSharePanelProps> = ({
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-surface-800">
         <div>
-          <h3 className="font-bold text-white text-base">P2P File Transfer</h3>
+          <h3 className="font-bold text-surface-100 text-base">P2P File Transfer</h3>
           <p className="text-xs text-surface-400">Direct, chunked peer-to-peer data channel transfers</p>
         </div>
         <button
           onClick={onClose}
-          className="p-1.5 rounded-lg text-surface-400 hover:text-white hover:bg-surface-800 transition-colors"
+          className="p-1.5 rounded-lg text-surface-400 hover:text-surface-100 hover:bg-surface-800 transition-colors"
           aria-label="Close file transfer panel"
         >
           <X className="w-5 h-5" />
@@ -75,7 +75,7 @@ export const FileSharePanel: React.FC<FileSharePanelProps> = ({
           <div className="w-10 h-10 rounded-xl bg-brand-500/10 text-brand-400 flex items-center justify-center mx-auto mb-2">
             <Upload className="w-5 h-5" />
           </div>
-          <p className="text-xs font-semibold text-white">Click or drag a file to send</p>
+          <p className="text-xs font-semibold text-surface-100">Click or drag a file to send</p>
           <p className="text-[11px] text-surface-400 mt-0.5">Documents, images, slides & archives</p>
         </div>
       </div>
@@ -95,7 +95,7 @@ export const FileSharePanel: React.FC<FileSharePanelProps> = ({
             >
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
-                  <p className="text-xs font-semibold text-white truncate" title={t.name}>
+                  <p className="text-xs font-semibold text-surface-100 truncate" title={t.name}>
                     {t.name}
                   </p>
                   <p className="text-[11px] text-surface-400">

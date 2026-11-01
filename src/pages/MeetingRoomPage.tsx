@@ -143,7 +143,7 @@ export const MeetingRoomPage: React.FC<MeetingRoomPageProps> = ({ roomId, onLeav
               <MousePointer className="w-4 h-4" />
             </div>
             <div>
-              <h4 className="font-bold text-white text-sm">Remote Control Request</h4>
+              <h4 className="font-bold text-surface-100 text-sm">Remote Control Request</h4>
               <p className="text-[11px] text-surface-400">Presenter authorization required</p>
             </div>
           </div>

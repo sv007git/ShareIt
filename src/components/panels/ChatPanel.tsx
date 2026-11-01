@@ -55,13 +55,13 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
         <div className="flex items-center gap-2">
           <MessageSquare className="w-4 h-4 text-brand-400" />
           <div>
-            <h3 className="font-bold text-white text-sm sm:text-base">In-Meeting Chat</h3>
+            <h3 className="font-bold text-surface-100 text-sm sm:text-base">In-Meeting Chat</h3>
             <p className="text-[11px] text-surface-400">Live texting while in call & screenshare</p>
           </div>
         </div>
         <button
           onClick={onClose}
-          className="p-1.5 rounded-lg text-surface-400 hover:text-white hover:bg-surface-800 transition-colors"
+          className="p-1.5 rounded-lg text-surface-400 hover:text-surface-100 hover:bg-surface-800 transition-colors"
           aria-label="Close chat"
         >
           <X className="w-5 h-5" />
@@ -141,7 +141,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
           value={inputText}
           onChange={(e) => setInputText(e.target.value)}
           placeholder="Send message to everyone..."
-          className="flex-1 bg-surface-900 border border-surface-700 rounded-xl px-3.5 py-2 text-xs text-white placeholder-surface-500 focus:outline-none focus:border-brand-500"
+          className="flex-1 bg-surface-900 border border-surface-700 rounded-xl px-3.5 py-2 text-xs text-surface-100 placeholder-surface-500 focus:outline-none focus:border-brand-500"
         />
         <button
           type="submit"

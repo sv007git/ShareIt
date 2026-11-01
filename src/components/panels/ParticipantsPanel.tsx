@@ -39,14 +39,14 @@ export const ParticipantsPanel: React.FC<ParticipantsPanelProps> = ({
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-surface-800">
         <div>
-          <h3 className="font-bold text-white text-base">
+          <h3 className="font-bold text-surface-100 text-base">
             Participants ({1 + participants.length})
           </h3>
           <p className="text-xs text-surface-400">Manage attendees and room security</p>
         </div>
         <button
           onClick={onClose}
-          className="p-1.5 rounded-lg text-surface-400 hover:text-white hover:bg-surface-800 transition-colors"
+          className="p-1.5 rounded-lg text-surface-400 hover:text-surface-100 hover:bg-surface-800 transition-colors"
           aria-label="Close participants panel"
         >
           <X className="w-5 h-5" />
@@ -78,7 +78,7 @@ export const ParticipantsPanel: React.FC<ParticipantsPanelProps> = ({
             </div>
             <div className="truncate">
               <div className="flex items-center gap-1.5">
-                <span className="text-xs font-semibold text-white truncate">{localName}</span>
+                <span className="text-xs font-semibold text-surface-100 truncate">{localName}</span>
                 <span className="text-[10px] text-surface-400">(You)</span>
               </div>
               {isHost && (

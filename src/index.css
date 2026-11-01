@@ -3,76 +3,92 @@
 @tailwind utilities;
 
 @layer base {
+  /* =========================================================================
+     DARK THEME (Default)
+     ========================================================================= */
   :root {
-    --color-bg: #090d16;
-    --color-surface: #0f172a;
-    --color-text: #f8fafc;
-    --color-border: #1e293b;
+    --color-surface-950: 9 13 22;      /* #090d16 Deep dark page background */
+    --color-surface-900: 15 23 42;     /* #0f172a Card/panel background */
+    --color-surface-800: 30 41 59;     /* #1e293b Input/secondary elements */
+    --color-surface-700: 51 65 85;     /* #334155 Borders */
+    --color-surface-600: 71 85 105;    /* #475569 Subtle borders */
+    --color-surface-500: 100 116 139;  /* #64748b Placeholder */
+    --color-surface-400: 148 163 184;  /* #94a3b8 Muted text */
+    --color-surface-300: 203 213 225;  /* #cbd5e1 Secondary text */
+    --color-surface-200: 226 232 240;  /* #e2e8f0 Primary body text */
+    --color-surface-100: 248 250 252;  /* #f8fafc Bright text */
+    --color-surface-50:  255 255 255;  /* #ffffff Pure white */
+
+    --color-brand-300: 124 195 253;   /* #7cc3fd */
+    --color-brand-400: 56 189 248;    /* #38bdf8 */
+    --color-brand-500: 12 135 235;    /* #0c87eb Primary azure blue */
+    --color-brand-600: 2 107 201;     /* #026bc9 Hover blue */
+    --color-brand-700: 3 85 163;      /* #0355a3 Deep blue */
   }
 
+  /* =========================================================================
+     LIGHT THEME
+     Clean modern light palette with crisp contrast
+     ========================================================================= */
   html.light {
-    --color-bg: #f8fafc;
-    --color-surface: #ffffff;
-    --color-text: #0f172a;
-    --color-border: #e2e8f0;
+    --color-surface-950: 248 250 252; /* #f8fafc Light page canvas */
+    --color-surface-900: 255 255 255; /* #ffffff Pure white card/panel */
+    --color-surface-800: 241 245 249; /* #f1f5f9 Subtle secondary pill/input */
+    --color-surface-700: 226 232 240; /* #e2e8f0 Crisp light borders */
+    --color-surface-600: 148 163 184; /* #94a3b8 */
+    --color-surface-500: 100 116 139; /* #64748b Muted labels */
+    --color-surface-400: 71 85 105;   /* #475569 Muted text */
+    --color-surface-300: 51 65 85;    /* #334155 Secondary dark text */
+    --color-surface-200: 30 41 59;    /* #1e293b Dark body text */
+    --color-surface-100: 15 23 42;    /* #0f172a Deepest headings */
+    --color-surface-50:  2 6 23;      /* #020617 High-contrast dark */
+
+    --color-brand-300: 2 132 199;     /* #0284c7 */
+    --color-brand-400: 3 105 161;     /* #0369a1 */
+    --color-brand-500: 12 135 235;    /* #0c87eb */
+    --color-brand-600: 2 107 201;     /* #026bc9 */
+    --color-brand-700: 3 85 163;      /* #0355a3 */
   }
 
-  /* Black and White (B&W Monochrome High Contrast Theme) */
+  /* =========================================================================
+     BLACK & WHITE (B&W) MONOCHROME THEME
+     Pure AMOLED #000000 Black, Stark #ffffff White & #27272a Razor Borders
+     ========================================================================= */
   html.theme-bw {
-    --color-bg: #000000;
-    --color-surface: #0a0a0a;
-    --color-text: #ffffff;
-    --color-border: #262626;
+    --color-surface-950: 0 0 0;       /* #000000 Pure AMOLED black canvas */
+    --color-surface-900: 10 10 10;    /* #0a0a0a Dark card/panel background */
+    --color-surface-800: 20 20 22;    /* #141416 Elevated surfaces */
+    --color-surface-700: 39 39 42;    /* #27272a Razor monochrome border */
+    --color-surface-600: 82 82 91;    /* #52525b Neutral border */
+    --color-surface-500: 113 113 122; /* #71717a Neutral 500 */
+    --color-surface-400: 161 161 170; /* #a1a1aa Subtle white text */
+    --color-surface-300: 212 212 216; /* #d4d4d8 Secondary white text */
+    --color-surface-200: 244 244 245; /* #f4f4f5 Primary white text */
+    --color-surface-100: 255 255 255; /* #ffffff Stark white text */
+    --color-surface-50:  255 255 255; /* #ffffff */
+
+    --color-brand-300: 255 255 255;   /* #ffffff Stark white accents */
+    --color-brand-400: 255 255 255;   /* #ffffff */
+    --color-brand-500: 255 255 255;   /* #ffffff Solid White CTA */
+    --color-brand-600: 228 228 231;   /* #e4e4e7 Hover light zinc */
+    --color-brand-700: 212 212 216;   /* #d4d4d8 Active zinc */
   }
 
   body {
-    background-color: var(--color-bg);
-    color: var(--color-text);
+    background-color: rgb(var(--color-surface-950));
+    color: rgb(var(--color-surface-100));
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     min-height: 100vh;
     min-height: 100dvh;
+    transition: background-color 0.2s ease, color 0.2s ease;
   }
 }
 
 /* =========================================================================
-   BLACK & WHITE MONOCHROME THEME OVERRIDES (theme-bw)
-   Ensures 100% pure high-contrast black & white across all views
+   BLACK & WHITE MONOCHROME THEME ACCENTS & CONTRAST
    ========================================================================= */
-
-html.theme-bw,
-html.theme-bw body {
-  background-color: #000000 !important;
-  color: #ffffff !important;
-}
-
-html.theme-bw .bg-surface-950,
-html.theme-bw [class*="bg-surface-950"] {
-  background-color: #000000 !important;
-}
-
-html.theme-bw .bg-surface-900,
-html.theme-bw [class*="bg-surface-900"],
-html.theme-bw .bg-surface-800,
-html.theme-bw [class*="bg-surface-800"] {
-  background-color: #0a0a0a !important;
-  border-color: #27272a !important;
-}
-
-html.theme-bw [class*="border-surface-"],
-html.theme-bw .border-surface-700,
-html.theme-bw .border-surface-800 {
-  border-color: #27272a !important;
-}
-
-html.theme-bw .text-brand-400,
-html.theme-bw .text-brand-300,
-html.theme-bw .text-sky-400,
-html.theme-bw [class*="text-brand-"] {
-  color: #ffffff !important;
-}
-
 html.theme-bw .bg-brand-500,
 html.theme-bw [class*="bg-brand-500"] {
   background-color: #ffffff !important;
@@ -92,30 +108,23 @@ html.theme-bw [class*="bg-brand-500"] svg {
   stroke: #000000 !important;
 }
 
-html.theme-bw .text-emerald-400,
-html.theme-bw .text-amber-400 {
-  color: #e4e4e7 !important;
-}
-
 html.theme-bw h1,
 html.theme-bw h2,
 html.theme-bw h3,
 html.theme-bw h4 {
-  color: #ffffff !important;
   background-image: none !important;
+  color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
 }
 
-html.theme-bw .bg-gradient-to-r,
-html.theme-bw .bg-gradient-to-tr,
-html.theme-bw .bg-gradient-to-br {
-  background-image: none !important;
-}
-
-/* Video tile borders in B&W mode */
 html.theme-bw .shadow-glow-brand {
   box-shadow: 0 0 0 2px #ffffff !important;
   border-color: #ffffff !important;
+}
+
+/* Light Mode specific shadows and borders */
+html.light .bg-surface-900 {
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
 }
 
 /* Mobile Safe Area and Viewport Adjustments */
@@ -123,30 +132,12 @@ html.theme-bw .shadow-glow-brand {
   .safe-area-pb {
     padding-bottom: env(safe-area-inset-bottom);
   }
-}
-
-/* Remote Control Pointer & Ripple Animations */
-@keyframes clickRipple {
-  0% {
-    transform: translate(-50%, -50%) scale(0.2);
-    opacity: 1;
-  }
-  100% {
-    transform: translate(-50%, -50%) scale(2.2);
-    opacity: 0;
+  .safe-area-pt {
+    padding-top: env(safe-area-inset-top);
   }
 }
 
-.remote-click-ripple {
-  position: absolute;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  pointer-events: none;
-  animation: clickRipple 0.6s cubic-bezier(0, 0, 0.2, 1) forwards;
-}
-
-/* Custom scrollbars */
+/* Custom Scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -157,16 +148,16 @@ html.theme-bw .shadow-glow-brand {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(148, 163, 184, 0.2);
+  background: rgba(148, 163, 184, 0.25);
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(148, 163, 184, 0.4);
+  background: rgba(148, 163, 184, 0.45);
 }
 
 /* Video element rendering */
 video {
-  transform: translateZ(0);
   backface-visibility: hidden;
+  transform: translateZ(0);
 }
